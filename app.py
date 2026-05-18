@@ -1,39 +1,55 @@
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Đọc trực tiếp file CSV
-df = pd.read_csv("SDnobel.csv")
+st.set_page_config(page_title="Nobel Dashboard")
 
-# Đếm số lượng theo loại laureate
-type_data = (
-    df.groupby("laureate_type")
-      .size()
-      .reset_index(name="count")
+st.title("🏆 Nobel Laureates Dashboard")
+
+uploaded_file = st.file_uploader(
+    "Upload CSV File",
+    type=["csv"]
 )
 
-# Màu cho từng loại
-colors = {
-    "Individual": "#3498db",
-    "Organization": "#e67e22"
-}
+if uploaded_file is not None:
 
-# Tạo biểu đồ
-plt.figure(figsize=(8, 5))
+    df = pd.read_csv(uploaded_file)
 
-plt.bar(
-    type_data["laureate_type"],
-    type_data["count"],
-    color=[colors.get(x, "#95a5a6") for x in type_data["laureate_type"]]
-)
+    st.subheader("Dataset Preview")
+    st.dataframe(df.head())
 
-# Tiêu đề và nhãn
-plt.title("Nobel Laureates by Type", fontsize=16, fontweight="bold")
-plt.xlabel("Laureate Type")
-plt.ylabel("Total Count")
+    if "laureate_type" in df.columns:
 
-# Giao diện tối giản
-plt.grid(axis='y', linestyle='--', alpha=0.5)
-plt.tight_layout()
+        type_data = (
+            df.groupby("laureate_type")
+              .size()
+              .reset_index(name="count")
+        )
 
-# Hiển thị biểu đồ
-plt.show()
+        colors = {
+            "Individual": "#3498db",
+            "Organization": "#e67e22"
+        }
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+
+        ax.bar(
+            type_data["laureate_type"],
+            type_data["count"],
+            color=[
+                colors.get(x, "#95a5a6")
+                for x in type_data["laureate_type"]
+            ]
+        )
+
+        ax.set_title("Nobel Laureates by Type")
+        ax.set_xlabel("Laureate Type")
+        ax.set_ylabel("Total Count")
+
+        st.pyplot(fig)
+
+    else:
+        st.error("Column 'laureate_type' not found")
+
+else:
+    st.info("Please upload a CSV file")
